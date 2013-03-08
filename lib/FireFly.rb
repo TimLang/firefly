@@ -11,6 +11,9 @@ module FireFly
     end
 
     module Util
+        def remove_anchor_point url
+            url.sub(/(.+)/, '\1')
+        end
     end
 
     module Event
@@ -37,15 +40,14 @@ module FireFly
         def start
             begin
                 base_url = @todo_urls.pop
-                puts "visited: #{base_url}"
+                puts "visited: #{base_url}" unless @visited_urls.has_key? base_url
                 begin
                     open(base_url).read.scan(/href=['|"](.+?)['|"]/) do |pending_url|
                         result_url = get_whole__url base_url, pending_url[0]
-                        @todo_urls << result_url if result_url && !@visited_urls.has_key?(result_url)
+                        @todo_urls << result_url if result_url && !@visited_urls.has_key?(result_url) && is_correct_url(result_url)
                     end
-                    #puts "todo size is #{@todo_urls.size}"
                 rescue
-                    puts 'error----------------'
+                    print "An error occurred: ",$!, "\n"
                 ensure
                     @visited_urls[base_url] = nil
                 end
@@ -62,17 +64,15 @@ module FireFly
 
         def is_correct_url url
             #/^http/ === url && @filters.map{|f| f.call(url)}.all? 
-            if !@filters.empty?
-                @filters.map{|f| f === url}.all?
-            else
-               /^http/ === url 
-            end
+            @filters.map{|f| f === url}.all? unless @filters.empty?
         end
 
         def get_whole__url current_url, url
-            if is_correct_url(url)
-                current_url.match(/(http:\/\/([^\/]+))\/?/)[1] << url if is_relative_url(url)     
-                url 
+            if is_relative_url url
+                match = current_url.match(/(http[s]?:\/\/([^\/]+))\/?/)
+                match[1] << url unless match === nil
+            else
+                url
             end
         end
 
@@ -86,5 +86,5 @@ puts "the version of Firefly is: #{FireFly::VERSION}"
 
 FireFly.start_crawl 'http://www.yesmywine.com.hk', {} do |core|
     core.test
-    core.add_filters [/www\.yesmywine\.com\.hk/]
+    core.add_filters [/http:\/\/www\.yesmywine\.com\.hk/] 
 end
