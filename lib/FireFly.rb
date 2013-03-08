@@ -52,9 +52,8 @@ module FireFly
             end while !@todo_urls.empty?
         end
 
-        def add_filters &block
-            puts "闭包: #{block}"
-            @filters << block
+        def add_filters rep
+            @filters.concat(rep).flatten
         end
 
         def is_relative_url url
@@ -63,9 +62,8 @@ module FireFly
 
         def is_correct_url url
             #/^http/ === url && @filters.map{|f| f.call(url)}.all? 
-            #/^http/ === url && (@filters[0].call(url) unless @filters.empty?)
             if !@filters.empty?
-                @filters[0].call(url)
+                @filters.map{|f| f === url}.all?
             else
                /^http/ === url 
             end
@@ -78,10 +76,6 @@ module FireFly
             end
         end
 
-        def custom_filter_pattern
-            true
-        end
-
         def test
             puts "im Tim Lang"
         end
@@ -92,7 +86,5 @@ puts "the version of Firefly is: #{FireFly::VERSION}"
 
 FireFly.start_crawl 'http://www.yesmywine.com.hk', {} do |core|
     core.test
-    core.add_filters do |url|
-        /www\.yesmywine\.com\.hk/ === url
-    end 
+    core.add_filters [/www\.yesmywine\.com\.hk/]
 end
