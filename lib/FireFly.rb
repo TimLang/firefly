@@ -84,7 +84,7 @@ end
 
 puts "the version of Firefly is: #{FireFly::VERSION}"
 
-FireFly.start_crawl 'http://www.yesmywine.com.hk', {} do |core|
+FireFly.start_crawl 'http://www.icili.com', {} do |core|
     core.test
-    core.add_filters [/http:\/\/www\.yesmywine\.com\.hk/] 
+    core.add_filters [/http:\/\/www\.icili\.com/] 
 end
